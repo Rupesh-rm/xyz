@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState, createContext } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import app from "../../firebase/config";
 import Header from "../../components/Header";
 import Cards from "../../components/Card";
@@ -13,7 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/DeleteForever";
 
-const UserContext = createContext()
+
 
 
 const db = getDatabase(app);
@@ -47,7 +47,7 @@ const AddServices = () => {
     const storageRefimg = ref(storage, `/SrcSource/${imageAsFile.name}`);
 
 
-    const FavoritUserContext = createContext();
+ 
 
 
 

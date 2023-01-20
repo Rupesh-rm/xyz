@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, ListItemButton, useTheme, List, ListItem, ListItemText, ListItemAvatar, Avatar, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TableContainer, Table, TableBody, TableCell, TableRow, Paper, DialogContentText, MenuItem, Select, FormControl, InputLabel, } from '@mui/material';
+import { Box, Typography, Grid, ListItemButton, useTheme, List, ListItem, ListItemText, ListItemAvatar, Avatar, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TableContainer, Table, TableBody, TableCell, TableRow, Paper, DialogContentText, MenuItem, Select, FormControl, InputLabel, Badge, } from '@mui/material';
 import app from '../firebase/config';
 import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import { tokens } from "../theme";
 import SourceIcon from '@mui/icons-material/Source';
-
-
 import Favorite from '@mui/icons-material/Favorite';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
@@ -19,17 +17,17 @@ const RequestServices = () => {
     const navigate = useNavigate()
     const [dilogData, setDilogData] = useState([]);
     const [openSelectDilog, setSelectDilog] = useState(false);
-    const [select, setSelect] = useState("");
+    const [select, setSelect] = useState(2);
     const [open, setOpen] = useState(false);
     const [openRequestServiceDilogBox, setOpenRequestServiceDilogBox] = useState(false)
 
     const [userData, setUserData] = useState([])
     const [requsestServicesData, setrequsestServicesData] = useState([]);
+    // console.log(requsestServicesData.length)
 
-
-
-
-    // read user data
+    const [userName, setUSerName] = useState(null)
+    // console.log(userName)
+    // read all  users data.
     useEffect(() => {
         const dbRef = ref(db);
         get(child(dbRef, `User/`))
@@ -46,10 +44,13 @@ const RequestServices = () => {
                 console.log("data is not avilable", error.message);
             });
     }, [userData]);
+
     //handdle Open Select DilogBox
-    const hnpanddleOpenSelectDilogBox = (name, uid) => {
+    const handdleOpenSelectDilogBox = (uid, name) => {
+        // open dilog when click user profile
         setSelectDilog(true)
 
+        // get user details data 
         const dbRef = ref(db);
         get(child(dbRef, `User/${uid}`))
             .then((snapshot) => {
@@ -64,15 +65,15 @@ const RequestServices = () => {
             });
 
 
-
+        // get request services data 
         get(child(dbRef, `Mysrc/${uid}`))
             .then((snapshot) => {
                 const data = snapshot.val();
                 setrequsestServicesData([])
                 if (snapshot.exists()) {
                     Object.values(data).map((reqServiceData) => {
-                        console.log("reqServiceData", reqServiceData)
-                        // return setrequsestServicesData((oldreqServiceData) => [...oldreqServiceData, reqServiceData])
+                        // console.log("reqServiceData", reqServiceData)
+                        return setrequsestServicesData((oldreqServiceData) => [...oldreqServiceData, reqServiceData])
                     })
                 }
             })
@@ -80,6 +81,9 @@ const RequestServices = () => {
                 console.log("data is not avilable", error.message);
             });
 
+
+
+        setUSerName(name)
 
     }
     //handdle Open Select DilogBox
@@ -95,16 +99,24 @@ const RequestServices = () => {
     // select your choice 
     const handdleAdminSelection = (e) => {
         setSelect(e.target.value)
+
+
         if (e.target.value === 1) {
             setOpen(true)
         }
+        if (e.target.value === 2) {
+            setOpenRequestServiceDilogBox(true)
+        }
+
+
+
     }
 
 
-    //open service request dilog box 
-    const handdleOpenReqServiceDilog = () => {
-        setOpenRequestServiceDilogBox(true)
-    }
+
+
+
+
     //Close service request dilog box 
     const handdleCloseReqServiceDilog = () => {
         setOpenRequestServiceDilogBox(false)
@@ -162,8 +174,6 @@ const RequestServices = () => {
         );
     }
 
-
-
     return (
         <Box m="20px">
             <Header title="Users" subtitle="User Request Service" />
@@ -172,16 +182,17 @@ const RequestServices = () => {
             <List  >
                 <Grid container item xs={12}  >
                     {userData.map((user, index) => {
-                        // console.log("userUid", user.uid)
+                        console.log(user);
                         return (
-
-
                             <Grid key={index} item xs={3} sx={{ width: '100%', borderColor: colors.primary[500], borderWidth: "2px", borderStyle: "solid", maxWidth: 400, background: colors.blueAccent[900] }} >
                                 <ListItem   >
                                     <ListItemAvatar>
-                                       
-                                        {/* onClick={() => { handdleOpenSelectDilogBox(user.uid) }} */}
-                                        <Avatar alt={user.name} src={user.profile} />
+
+                                        {/*  */}
+                                        <Badge color="primary" badgeContent={requsestServicesData.length}>
+
+                                            <Avatar alt={user.name} src={user.profile} onClick={() => { handdleOpenSelectDilogBox(user.uid, user.name) }} />
+                                        </Badge>
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={user.name}
@@ -215,14 +226,6 @@ const RequestServices = () => {
                                 </ListItem>
 
                             </Grid>
-
-
-
-
-
-
-
-
                         )
 
                     })}
@@ -261,7 +264,7 @@ const RequestServices = () => {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => { setOpen(true) }} color="secondary" variant="outlined" > Open </Button>
+                        {select && <Button onClick={() => { setOpenRequestServiceDilogBox(true) }} color="secondary" variant="outlined" > Open </Button>}
                         <Button onClick={handdlColseSelectDilogBox} color="secondary" variant="outlined" > Close </Button>
                     </DialogActions>
                 </Dialog>
@@ -277,15 +280,54 @@ const RequestServices = () => {
                     aria-describedby="alert-dialog-description"
                 >
                     <DialogTitle id="alert-dialog-title">
-                        {"Select Your Choice?"}
+                        {`${userName} Request These Services....`}
                     </DialogTitle>
                     <DialogContent>
+
                         <DialogContentText id="alert-dialog-description">
-                            this is request services dilog
+
+                            {requsestServicesData.map((userRequsestServices, index) => {
+                                return (
+                                    <Grid key={index} item xs={3} sx={{ width: '100%', maxWidth: 400, background: colors.blueAccent[900] }} >
+                                        <ListItem   >
+                                            <ListItemAvatar>
+                                                <Avatar alt={userRequsestServices.name} src={userRequsestServices.img} />
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={userRequsestServices.srcname}
+                                                sx={{
+                                                    "& 	.MuiListItemText-primary": {
+                                                        color: colors.greenAccent[400],
+                                                        fontSize: "18px"
+                                                    }
+                                                }}
+
+                                                secondary={
+                                                    <React.Fragment>
+                                                        <Typography
+                                                            sx={{ display: 'inline' }}
+                                                            component="span"
+                                                            variant="body2"
+                                                            color={"text.primary"}
+                                                        >
+                                                            {userRequsestServices.date}
+                                                        </Typography>
+
+                                                    </React.Fragment>
+                                                }
+                                            />
+                                            <ListItemButton edge="end" aria-label="like" >
+                                            </ListItemButton>
+                                        </ListItem>
+
+                                    </Grid>
+                                )
+
+                            })}
+
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-
                         <Button onClick={handdleCloseReqServiceDilog} color="secondary" variant="outlined" > Close </Button>
                     </DialogActions>
                 </Dialog>

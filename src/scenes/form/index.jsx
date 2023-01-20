@@ -15,18 +15,18 @@ const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
 
   const handleFormSubmit = (values) => {
-    // createUserWithEmailAndPassword(auth, values.firstName, values.email)
-    //   .then((userCredential) => {
-    //     // Signed in
-    //     const user = userCredential.user;
-    //     console.log(user);
+    createUserWithEmailAndPassword(auth, values.firstName, values.email)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        console.log(user);
 
-    //     console.log("Data Inserted");
-    //   })
-    //   .catch((err) => {
-    //     console.log("error is", err.message);
-    //   });
-    // console.log(values.firstName);
+        console.log("Data Inserted");
+      })
+      .catch((err) => {
+        console.log("error is", err.message);
+      });
+    console.log(values.firstName);
 
     console.log(values)
   };
