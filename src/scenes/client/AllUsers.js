@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Grid, ListItemButton, useTheme, List, ListItem, ListItemText, ListItemAvatar, Avatar, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TableContainer, Table, TableBody, TableCell, TableRow, Paper, } from '@mui/material';
 import app from '../../firebase/config';
-import { child, get, getDatabase, ref , set, update } from "firebase/database";
+import { child, get, getDatabase, ref, set, update } from "firebase/database";
 import { tokens } from "../../theme";
 import SourceIcon from '@mui/icons-material/Source';
 
@@ -9,6 +9,7 @@ import Favorite from '@mui/icons-material/Favorite';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
+import ShowAlert from '../../components/ShowAlert';
 
 const db = getDatabase(app);
 
@@ -18,8 +19,10 @@ const AllUserList = () => {
   const colors = tokens(theme.palette.mode);
   const [dilogData, setDilogData] = useState([]);
   const [open, setOpen] = useState(false);
+  const [userData, setUserData] = useState([]);
 
-  const [userData, setUserData] = useState([])
+  const [openAlert, setOpenAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
 
   // open user details dilogbox
   const handleClickOpen = (uid) => {
@@ -45,7 +48,7 @@ const AllUserList = () => {
   };
 
 
-// read user data
+  // read user data
   useEffect(() => {
     const dbRef = ref(db);
     get(child(dbRef, `User/`))
@@ -65,20 +68,26 @@ const AllUserList = () => {
 
 
   // add fav client
-  const addFavClient = (uid, seen) => {
+  const addFavClient = (uid, seen, name) => {
     const dbRef = ref(db);
     if (seen === false) {
       update(child(dbRef, `User/${uid}`), {
         seen: true
       }).then(() => {
-        alert("User added in Favorite List")
+        setOpenAlert(true);
+        let msg = `<h2> ${name} </h2> Added In Favorite List`;
+        setAlertMessage(msg)
+        // setAlertMessage(` Added In Favorite List`)
       }).catch(err => alert(err.message))
     } else {
       update(child(dbRef, `User/${uid}`), {
         seen: false
       }).then(() => {
-        alert("User removed from Favorite List")
-      }).catch(err => alert(err.message))
+        setOpenAlert(true);
+        setAlertMessage(` <h2> ${name} </h2> Removed from Favorite List`)
+        // setAlertMessage(`  Removed from Favorite List`)
+
+      }).catch(err => console.log(err.message))
     }
   }
 
@@ -120,10 +129,17 @@ const AllUserList = () => {
   return (
     <Box m="20px">
       <Header title="Users" subtitle="Your All Users" />
+      <ShowAlert
+        sx={{ display: "none" }}
+        message={alertMessage}
+        show={openAlert}
+        hide={() => { setOpenAlert(false) }}
+      />
       {/* user list  */}
       <List  >
         <Grid container item xs={12}  >
           {userData.map((user, index) => {
+
             return (
               <Grid key={index} item xs={3} sx={{ width: '100%', borderColor: colors.primary[500], borderWidth: "2px", borderStyle: "solid", maxWidth: 400, background: colors.blueAccent[900] }} >
                 <ListItem   >
@@ -155,7 +171,7 @@ const AllUserList = () => {
                   />
                   <ListItemButton edge="end" aria-label="like" >
                     {
-                      user.seen ? <Favorite sx={{ color: colors.redAccent[600] }} onClick={() => addFavClient(user.uid, user.seen)} /> : <Favorite sx={{ color: "white" }} onClick={() => addFavClient(user.uid, user.seen)} />
+                      user.seen ? <Favorite sx={{ color: colors.redAccent[600] }} onClick={() => addFavClient(user.uid, user.seen, user.name)} /> : <Favorite sx={{ color: "white" }} onClick={() => addFavClient(user.uid, user.seen, user.name)} />
                     }
 
                   </ListItemButton>

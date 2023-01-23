@@ -43,17 +43,31 @@ body,
 
 
 .hide {
-  display: none;
+  /* display: none; */
   position: relative;
 
 }
 
-.myServiceImages:hover+.hide {
+.myServiceImages:hover::after {
+  content: "ddddddddddd";
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  background-color: red;
+  text-align: center;
+  color: red;
+
+}
+
+/* .myServiceImages:hover+.hide {
   position: absolute;
   top: 50%;
   left: 50%;
   display: block;
   color: red;
   text-align: center;
-  
-}
+
+} */

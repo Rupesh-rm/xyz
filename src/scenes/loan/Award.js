@@ -9,6 +9,7 @@ import app from "../../firebase/config";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { getDatabase, ref as rdbf, set, child, get, remove } from "firebase/database";
 import currentDate from "../../utils/date";
+import ShowAlert from "../../components/ShowAlert";
 
 
 const db = getDatabase(app);
@@ -24,15 +25,17 @@ const Award = () => {
   const storageRef = ref(storage, `/Award/${file.name}`);
   const [cards, setCards] = useState([]);
 
+  const [openAlert, setOpenAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState("")
+  // console.log("alertMessage", alertMessage);
+
   // Handle file upload event and update state
   function handleChange(event) {
     setFile(event.target.files[0]);
   }
   // submit data
   function handleUpload(value) {
-    if (!file) {
-      alert("Insert Your Image Before Insert")
-    }
+
     const uploadTask = uploadBytesResumable(storageRef, file);
     uploadTask.on(
       "state_changed",
@@ -52,11 +55,13 @@ const Award = () => {
             date: currentDate,
             seq: uid,
             img: url
-          }).catch(()=>{
-            alert("Inserted Succssfully");
+          }).then(() => {
+            setOpenAlert(true)
+            setAlertMessage("Inserted SuccessFully")
             setPercent(0)
+            setFile("")
           }).catch(err => alert("Not inserted some error.", err.message));
-          
+
         });
       }
     );
@@ -84,22 +89,20 @@ const Award = () => {
 
 
   // delete data 
-  const deleteCardItems = (id) => {
-    setTimeout(() => {
-
-      // delete image url
-      deleteObject(storageRef)
-        .then(() => {
-          alert("Url has been deleted");
-        }).catch(() => {
-          alert("deleted")
-        })
-    }, 1500);
-
-
-
+  const deleteCardItems = (uid, url) => {
+    // delete image url
+    deleteObject(ref(storage, `${url}`));
     // delete header text and other
-    remove(rdbf(db, `Award/${cards[id].seq}`))
+    remove(rdbf(db, `Award/${uid}`))
+      .then(() => {
+        setOpenAlert(true)
+        setAlertMessage("Deleted SuccessFully")
+      }).catch((err) => {
+        setOpenAlert(true)
+        setAlertMessage(`Not Deleted ${err.message}!!!!`)
+      })
+
+
 
   }
 
@@ -107,6 +110,12 @@ const Award = () => {
   return (
     <Box m="20px" width="98%" >
       <Header title="Award page" subtitle="Enter Awards Details For your user" />
+      <ShowAlert
+        sx={{ display: "none" }}
+        message={alertMessage}
+        show={openAlert}
+        hide={() => { setOpenAlert(false) }}
+      />
       <Stack direction="row" alignItems="center" marginBottom="20px" spacing={2}>
         <IconButton color="primary" aria-label="upload picture" component="label">
           <input hidden onChange={handleChange} accept="/image/*" type="file" />
@@ -116,8 +125,8 @@ const Award = () => {
               fontSize: "30px"
             }} />
         </IconButton>
-        <Button color="primary" variant="contained" component="label">
-          Upload
+        <Button disabled={!file} color="secondary" variant="outlined" component="label">
+          Add Award
           <Button onClick={handleUpload} hidden />
         </Button>
         <p>{percent} "% done"</p>
@@ -127,10 +136,11 @@ const Award = () => {
         {cards.map((card, index) => {
           return (
             <Cards
+              key={index}
               img={card.img}
               date={card.date}
               deleteItem={() => {
-                deleteCardItems(index);
+                deleteCardItems(card.seq, card.img);
               }}
             />
           );

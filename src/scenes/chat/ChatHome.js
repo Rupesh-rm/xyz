@@ -260,7 +260,7 @@ const AllUserList = () => {
             </Grid>
           </Grid>
 
-          <Box sx={{ width: "100%", maxHeight: "330px", overflowY: "scroll", marginTop: "10px" }} >
+          <Box sx={{ width: "100%", height: "330px", overflowY: "scroll", marginTop: "10px" }} >
             {
               messageContainer.map((message) => {
                 // console.log("uid is ", message.uid, "and  id is ", message.id)

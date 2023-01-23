@@ -17,6 +17,7 @@ import Diversity2OutlinedIcon from '@mui/icons-material/Diversity2Outlined';
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import Diversity3OutlinedIcon from "@mui/icons-material/Diversity3Outlined";
 import MessageIcon from "@mui/icons-material/MessageOutlined"
+import ArrowCircleLeftOutlinedIcon from '@mui/icons-material/ArrowCircleLeftOutlined';
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -199,7 +200,7 @@ const Sidebar = () => {
             <Item
               title="Installed User"
               to="/app-installed-user"
-              icon={<DownloadDoneIcon />}
+              icon={<ArrowCircleLeftOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />    

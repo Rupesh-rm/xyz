@@ -28,11 +28,11 @@ const Cards = ({ img, date, header, deleteItem, favoritUser, serviceAddSource })
         </Typography>
       </CardContent >
       <CardActions disableSpacing>
-        <IconButton aria-label="add to favorites">
-          <FavoriteIcon key={4} onClick={favoritUser} />
+        <IconButton aria-label="add to favorites" onClick={favoritUser}>
+          <FavoriteIcon key={4} />
         </IconButton>
-        <IconButton aria-label="share">
-          <DeleteIcon key={5} onClick={deleteItem} />
+        <IconButton aria-label="share" onClick={deleteItem}>
+          <DeleteIcon key={5} />
         </IconButton>
       </CardActions>
     </Card>

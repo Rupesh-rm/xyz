@@ -12,6 +12,8 @@ import currentDate from "../../utils/date";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/DeleteForever";
+import ShowAlert from "../../components/ShowAlert";
+
 
 
 
@@ -32,7 +34,7 @@ const AddServices = () => {
     const [allImages, setAllImages] = useState([])
     const [allTexts, setAllTexts] = useState([])
     // console.log("all images", allImages);
-    const [imagePercent, setimagePercent] = useState(0);
+    const [imagePercent, setImagePercent] = useState(0)
     const [header, setHeader] = useState("");
     const [textField, setTextField] = useState("");
     const [textFieldTitle, setTextFieldTitle] = useState("");
@@ -47,10 +49,12 @@ const AddServices = () => {
     const storageRefimg = ref(storage, `/SrcSource/${imageAsFile.name}`);
 
 
- 
 
 
-
+    // alert variables
+    const [openAlert, setOpenAlert] = useState(false)
+    const [alertMessage, setAlertMessage] = useState("")
+    // console.log("alertMessage", alertMessage);
 
 
 
@@ -74,11 +78,9 @@ const AddServices = () => {
         setFile(event.target.files[0]);
     }
     // write data : Add services
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = (e, resolve, reject) => {
         e.preventDefault();
-        if (!file) {
-            alert("Insert Your Image Before Insert")
-        }
+
         const uploadTask = uploadBytesResumable(storageRef, file);
         uploadTask.on(
             "state_changed",
@@ -94,6 +96,7 @@ const AddServices = () => {
             () => {
                 // download url
                 getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+
                     const uid = new Date().getTime();
                     set(rdbf(db, `/Src/${uid}/`), {
                         date: currentDate,
@@ -101,6 +104,19 @@ const AddServices = () => {
                         img: url,
                         name: header,
                         top: true
+                    }).then(() => {
+
+                        setOpenAlert(true)
+                        setAlertMessage(` Service Added Successfully! `)
+                        setPercent(0)
+                        setFile("")
+                        setHeader("")
+                        resolve()
+
+                    }).catch((err) => {
+                        reject()
+                        setOpenAlert(true)
+                        setAlertMessage(` Service Not Added Some Error Occurred ${err.message} `)
                     });
                 });
             }
@@ -122,47 +138,66 @@ const AddServices = () => {
                     console.log("Data is not available")
                 }
             }).catch((err) => {
-                console.error(err.message);
+                setOpenAlert(true)
+                setAlertMessage(`Added Top!`)
             })
     });
-    // delete data 
-    const deleteCardItems = (id) => {
-        // delete image url
 
 
-        deleteObject(storageRef)
-            .then(() => {
-                alert("Url has been deleted");
-            })
-            .catch((error) => {
-                alert("Url has been not deleted", error.message);
+///
+    // delete services
+    const deleteCardItems = (uid, url) => {
 
-            });
+        deleteObject(ref(storage, `${url}`));
+        
+        remove(rdbf(db, `Src/${uid}`))
+        .then(() => {
+            setOpenAlert(true)
+            setAlertMessage("Url has been deleted")
+            
+        }).catch((err) => {
+
+            setOpenAlert(true)
+            setAlertMessage(`Photo has been not deleted ${err.message}`);
+            console.log("Error message", err.message)
+        });
 
 
-        setTimeout(() => {
-            // delete header text and other
-            remove(rdbf(db, `Src/${cards[id].uid}`));
-        }, 500);
+
+
+
+
+
+
     }
+
     //insert at top
-    const insrtTop = (uid, top, index) => {
+    const insrtTop = (uid, top) => {
         // alert(index)
         const dbRef = rdbf(db)
         if (top === true) {
             update(child(dbRef, `/Src/${uid}`), {
                 top: false,
             }).then(() => {
-                alert("Top cancle")
-            }).catch(err => alert("Not Added top", err.message))
+                setOpenAlert(true)
+                setAlertMessage(`Added Top!`)
+            }).catch(err => {
+                setOpenAlert(true)
+                setAlertMessage(`Added Top Cancled!, ${err.message}`)
+            })
         }
 
         if (top === false) {
             update(child(dbRef, `/Src/${uid}`), {
                 top: true,
             }).then(() => {
-                alert("Add top")
-            }).catch(err => alert("Not cancled top", err.message))
+
+                setOpenAlert(true)
+                setAlertMessage(` Added Top Cancled!`)
+            }).catch(err => {
+                setOpenAlert(true)
+                setAlertMessage(`Top Cancled!, ${err.message}`)
+            })
 
         }
 
@@ -187,7 +222,8 @@ const AddServices = () => {
                 );
 
                 // update progress
-                setimagePercent(imagePercent);
+
+                setAlertMessage(`upload Phhoto - ${imagePercent} %`)
             },
             (err) => alert(err),
             () => {
@@ -199,6 +235,13 @@ const AddServices = () => {
                         img: url,
                         uid: `${uid}`,
                         suid: `${suid_}`
+                    }).then(() => {
+
+                        setFile("");
+                        setImagePercent(0)
+
+                        setOpenAlert(true)
+                        setAlertMessage(`Photos Added Successfully!`)
                     });
                 });
 
@@ -217,7 +260,7 @@ const AddServices = () => {
                         return setAllImages((oldImages) => [...oldImages, { image: serviceData.img, uid: serviceData.uid, suid: serviceData.suid }])
                     })
                 } else {
-                    console.log("Data is not available")
+                    return;
                 }
             }).catch((err) => {
                 console.info(err.message);
@@ -225,7 +268,18 @@ const AddServices = () => {
     }
     //delete : dilog box - image
     const deleteServiceImagesOfDilogBox = (uid, suid_) => {
-        alert(uid, suid_)
+        // alert(uid, suid_);
+        console.log(storageRefimg)
+        deleteObject(storageRefimg)
+            .then(() => {
+                setOpenAlert(true)
+                setAlertMessage(`Url has been  deleted!`)
+            })
+            .catch((error) => {
+
+                setOpenAlert(true)
+                setAlertMessage(`Url has been not deleted!  ${error.message}.`)
+            });
     }
     useEffect(() => {
         readServiceImages()
@@ -236,14 +290,31 @@ const AddServices = () => {
     const handleSubmitText = (e) => {
         e.preventDefault()
         const uid = new Date().getTime();
-        if (!textFieldTitle && !textField) {
-            alert("Please enter your texts")
+        if (!textFieldTitle || !textField) {
+
+            setOpenAlert(true)
+            setAlertMessage(`Please enter your texts.`)
+
+
         }
         set(rdbf(db, `SrcSource/${suid_}/stext/${uid}/`), {
             tittle: textFieldTitle,
             text: textField,
             uid: `${uid}`,
             suid: `${suid_}`
+        }).then(() => {
+
+            setTextField("");
+            setTextFieldTitle("")
+
+
+            setOpenAlert(true)
+            setAlertMessage(`Texts add In Your Application.`)
+
+        }).catch((err) => {
+            // alert("Text Not Inserted, Some Error Occurred!", err.message)
+            setOpenAlert(true)
+            setAlertMessage(`Text Not Inserted, Some Error Occurred! ${err.message}.`)
         });
 
     }
@@ -259,25 +330,36 @@ const AddServices = () => {
                         return setAllTexts((oldTexts) => [...oldTexts, { tittle: serviceData.tittle, paragraph: serviceData.text, uid: serviceData.uid, suid: serviceData.suid }])
                     })
                 } else {
-                    console.log("Data is not available")
+                    return;
                 }
             }).catch((err) => {
                 console.info(err.message);
             })
     }
     // delete accordians 
-    const deleteAccordions = (uid, suid_, index) => {
-        alert(uid, ":", index)
+    const deleteAccordions = (uid, suid_) => {
+        // alert(uid, ":", index)
         // delete header text and other
         remove(rdbf(db, `SrcSource/${suid_}/stext/${uid}`))
-            .then(() => alert("Deleted"))
-            .catch((err) => alert("Not deleted", err.message))
+            .then(() => {
+                setOpenAlert(true)
+                setAlertMessage(`Text deleted`)
+            })
+            .catch((err) => {
+                setOpenAlert(true)
+                setAlertMessage(`Text Not deleted  ${err.message}`)
+            })
     }
 
     return (
         <Box m="20px" width="98%">
             <Header title="Service" subtitle="Add your services here" />
-
+            <ShowAlert
+                sx={{ display: "none" }}
+                message={alertMessage}
+                show={openAlert}
+                hide={() => { setOpenAlert(false) }}
+            />
             <Box display="flex" flexWrap="wrap" gap="30px" >
                 <Card sx={{ minWidth: 310, marginBottom: "30px", padding: "20px" }} >
                     <Box display="flex" justifyContent="end" marginBottom="15px" >
@@ -321,7 +403,7 @@ const AddServices = () => {
                             />
                         </Box>
                         <Box display="flex" justifyContent="center" mt="20px" mb="10px">
-                            <Button type="submit" color="secondary" variant="outlined">
+                            <Button disabled={!file || !header} type="submit" color="secondary" variant="outlined">
                                 Add Service
                             </Button>
 
@@ -335,13 +417,14 @@ const AddServices = () => {
 
                         return (
                             <Cards
+                                key={index}
                                 img={card.img}
                                 date={card.date}
                                 header={card.name}
                                 deleteItem={() => {
-                                    deleteCardItems(index)
+                                    deleteCardItems(card.uid, card.img)
                                 }}
-                                favoritUser={() => insrtTop(card.uid, card.top, index)}
+                                favoritUser={() => insrtTop(card.uid, card.top)}
                                 serviceAddSource={() => openDilog(card.uid)}
                             />
                         );
@@ -367,17 +450,15 @@ const AddServices = () => {
                             <CloseIcon />
                         </IconButton>
                         <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                            Sound
+                            Close
                         </Typography>
-                        <Button autoFocus color="inherit" onClick={handleClose}>
-                            save
-                        </Button>
+
 
 
                     </Toolbar>
                 </AppBar>
 
-                <Grid container xs={12} spacing={2} sx={{
+                <Grid container spacing={2} sx={{
                     bgcolor: colors.primary[500]
                 }} >
                     <Grid item xs={6} sx={{ borderRight: "3px solid white", marginTop: "20px" }} >
@@ -398,7 +479,7 @@ const AddServices = () => {
                                     Add Image
                                     <button type="submit" hidden />
                                 </Button>
-                                <Typography variant="h5" alignItems="end" >{imagePercent} "% done"</Typography>
+
                             </form>
                         </Stack>
                         <ImageList sx={{ width: 600, height: 450, margin: "10px auto" }} cols={3} rowHeight={164}>
@@ -408,12 +489,12 @@ const AddServices = () => {
                                         src={allImagesData.image}
                                         alt={allImagesData.uid}
                                     />
-                                    <div class="hide">
-                                        <IconButton>
+                                    <div className="hide">
+                                        <IconButton onClick={() => { deleteServiceImagesOfDilogBox(allImagesData.uid, allImagesData.uid) }}>
                                             <DeleteIcon sx={{
                                                 color: colors.greenAccent[500],
                                                 fontSize: "28px"
-                                            }} onClick={() => { deleteServiceImagesOfDilogBox(allImagesData.uid, allImagesData.uid) }} />
+                                            }} />
                                         </IconButton>
                                     </div>
 
@@ -429,7 +510,7 @@ const AddServices = () => {
                                 maxWidth: '100%',
                             }}
                         >
-                            <form onSubmit={handleSubmitText} >
+                            <form onSubmit={handleSubmitText} style={{ position: "relative" }} >
                                 <TextField
                                     id="standard-textarea"
                                     label="Title"
@@ -457,9 +538,12 @@ const AddServices = () => {
                                     sx={{ gridColumn: "span 3", }}
                                     margin="dense"
                                 />
-                                <Button sx={{ marginTop: "10px", marginBottom: "10px", textAlign: "right" }} color="secondary" variant="outlined" type="submit">
-                                    Add Text
-                                </Button>
+                                <Box style={{ position: "relative", top: "10px", right: "10px" }} >
+
+                                    <Button sx={{ marginTop: "10px", marginBottom: "10px", textAlign: "right", }} color="secondary" variant="outlined" type="submit">
+                                        Add Text
+                                    </Button>
+                                </Box>
                             </form>
 
                         </Box>
@@ -480,7 +564,7 @@ const AddServices = () => {
                                         </AccordionDetails>
                                         <AccordionActions  >
                                             <IconButton>
-                                                <DeleteIcon onClick={() => { deleteAccordions(text.uid, text.suid, index) }} />
+                                                <DeleteIcon onClick={() => { deleteAccordions(text.uid, text.suid) }} />
                                             </IconButton>
                                         </AccordionActions>
                                     </Accordion>

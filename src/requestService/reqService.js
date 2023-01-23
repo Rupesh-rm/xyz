@@ -8,6 +8,7 @@ import Favorite from '@mui/icons-material/Favorite';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import ShowAlert from '../components/ShowAlert';
 
 const db = getDatabase(app);
 
@@ -23,11 +24,15 @@ const RequestServices = () => {
 
     const [userData, setUserData] = useState([])
     const [requsestServicesData, setrequsestServicesData] = useState([]);
-    // console.log(requsestServicesData.length)
-
+  
     const [userName, setUSerName] = useState(null)
     // console.log(userName)
     // read all  users data.
+    const [openAlert, setOpenAlert] = useState(false)
+    const [alertMessage, setAlertMessage] = useState("")
+    // console.log("alertMessage", alertMessage);
+
+
     useEffect(() => {
         const dbRef = ref(db);
         get(child(dbRef, `User/`))
@@ -99,8 +104,6 @@ const RequestServices = () => {
     // select your choice 
     const handdleAdminSelection = (e) => {
         setSelect(e.target.value)
-
-
         if (e.target.value === 1) {
             setOpen(true)
         }
@@ -128,13 +131,19 @@ const RequestServices = () => {
             update(child(dbRef, `User/${uid}`), {
                 seen: true
             }).then(() => {
-                alert("User added in Favorite List")
+                // alert("User added in Favorite List")
+                setOpenAlert(true)
+                setAlertMessage("User added in Favorite List")
+
             }).catch(err => alert(err.message))
         } else {
             update(child(dbRef, `User/${uid}`), {
                 seen: false
             }).then(() => {
-                alert("User removed from Favorite List")
+                // alert("User removed from Favorite List")
+                setOpenAlert(true)
+                setAlertMessage("User removed from Favorite List")
+
             }).catch(err => alert(err.message))
         }
     }
@@ -177,12 +186,18 @@ const RequestServices = () => {
     return (
         <Box m="20px">
             <Header title="Users" subtitle="User Request Service" />
+            <ShowAlert
+                sx={{ display: "none" }}
+                message={alertMessage}
+                show={openAlert}
+                hide={() => { setOpenAlert(false) }}
+            />
             {/* user list  */}
             {/*========================================== all user   =======================================================  */}
             <List  >
                 <Grid container item xs={12}  >
                     {userData.map((user, index) => {
-                        console.log(user);
+                     
                         return (
                             <Grid key={index} item xs={3} sx={{ width: '100%', borderColor: colors.primary[500], borderWidth: "2px", borderStyle: "solid", maxWidth: 400, background: colors.blueAccent[900] }} >
                                 <ListItem   >

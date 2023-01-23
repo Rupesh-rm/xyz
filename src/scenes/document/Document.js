@@ -1,7 +1,7 @@
 
 
 import { Box, Button, IconButton, TextField, useTheme } from "@mui/material"
-import {  useState } from "react"
+import { useState } from "react"
 import { tokens } from "../../theme";
 import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternate"
 import Header from "../../components/Header";
@@ -14,6 +14,7 @@ import Select from '@mui/material/Select';
 import Cards from "../../components/Card";
 import { getDownloadURL, getStorage, uploadBytesResumable, ref as storageRef } from "firebase/storage";
 import currentDate from "../../utils/date";
+import ShowAlert from "../../components/ShowAlert";
 
 
 
@@ -32,13 +33,17 @@ const Document = () => {
     // console.log("userUid", userUid);
     const [userDoc, setUserDoc] = useState([])
     // console.log(userDoc.length);
-    const [age, setAge] = useState('');
+    const [select, setSelect] = useState(1);
 
     // send doc
     const storageForImg = getStorage(app);
     const [img, setImg] = useState();
     const storageRefForImage = storageRef(storageForImg, `Document/${userUid}`)
     const [percent, setPercent] = useState(0);
+
+    const [openAlert, setOpenAlert] = useState(false)
+    const [alertMessage, setAlertMessage] = useState("")
+    // console.log("alertMessage", alertMessage);
 
     const tempUid = () => {
         const dbRef = ref(db);
@@ -60,7 +65,7 @@ const Document = () => {
     tempUid()
 
     const handleChangeText = async (event) => {
-        setAge(event.target.value);
+        setSelect(event.target.value);
 
 
         if (event.target.value === 2) {
@@ -71,25 +76,23 @@ const Document = () => {
                     setUserDoc([])
                     if (snapshot.exists()) {
                         // console.log(data);
-
                         Object.values(data).map((userDocs) => {
                             console.log("who", userDocs.who);
                             if (userDocs.who === true) {
                                 return setUserDoc((oldDoc) => [...oldDoc, userDocs])
                             }
-
                             // console.log("user doc is ...........", userDocs)
                         })
 
                     } else {
-                        console.log("No data available");
-                        alert("this user have not any document")
+
+                        setOpenAlert(true)
+                        setAlertMessage("this user have not any document")
                     }
                 })
                 .catch((error) => {
                     console.error(error);
                 });
-            console.log("2")
         } else {
             if (event.target.value === 3) {
                 const dbRef = ref(db);
@@ -108,8 +111,8 @@ const Document = () => {
                             })
 
                         } else {
-                            console.log("No data available");
-                            alert("this user have not any document")
+                            setOpenAlert(true)
+                            setAlertMessage("this user have not any document")
                         }
                     })
                     .catch((error) => {
@@ -133,8 +136,8 @@ const Document = () => {
                             })
 
                         } else {
-                            console.log("No data available");
-                            alert("this user have not any document")
+                            setOpenAlert(true)
+                            setAlertMessage("this user have not any document")
                         }
                     })
                     .catch((error) => {
@@ -150,7 +153,9 @@ const Document = () => {
     const handleUploadImage = (e) => {
         e.preventDefault()
         if (!img) {
-            alert("Select your image first")
+
+            setOpenAlert(true)
+            setAlertMessage("Select your image first")
         } else {
             const uploadImg = uploadBytesResumable(storageRefForImage, img);
             uploadImg.on("state_changed", (snapshot) => {
@@ -158,7 +163,9 @@ const Document = () => {
                     (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
 
                 // update progress
-                setPercent(percent);
+               
+                setOpenAlert(true)
+                setAlertMessage(`Document Uploaded ${percent} % !!!!`)
             },
                 (err) => alert(err.message),
                 () => {
@@ -174,6 +181,11 @@ const Document = () => {
                             type: "pdf",
                             uid: `${userUid.uid}`,
                             who: true
+                        }).then(() => {
+                            setOpenAlert(true)
+                            setAlertMessage("Document Send SuccessFully SuccessFully")
+                            setPercent(0)
+                            setImg("")
                         })
                     })
                 }
@@ -183,6 +195,12 @@ const Document = () => {
     return (
         <Box m="20px" >
             <Header title="Documents" subtitle="User document" />
+            <ShowAlert
+                sx={{ display: "none" }}
+                message={alertMessage}
+                show={openAlert}
+                hide={() => { setOpenAlert(false) }}
+            />
             <Box m="20px" sx={{ display: "flex", width: "100%" }} >
                 <IconButton color="primary" aria-label="upload picture" component="label">
                     <input onChange={handleChangeImage} hidden accept=".pdf" type="file" />
@@ -220,7 +238,7 @@ const Document = () => {
                         <Select
                             labelId="demo-simple-select-autowidth-label"
                             id="demo-simple-select-autowidth"
-                            value={age}
+                            value={select}
                             onChange={handleChangeText}
                             autoWidth
                             label="Documents"

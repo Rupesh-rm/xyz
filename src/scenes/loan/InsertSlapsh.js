@@ -20,6 +20,7 @@ import Stack from '@mui/material/Stack'
 import { useTheme } from '@emotion/react';
 import { tokens } from '../../theme';
 import Header from '../../components/Header';
+import ShowAlert from '../../components/ShowAlert';
 
 
 const db = getDatabase(app);
@@ -35,31 +36,32 @@ const Insert = () => {
   // State to store uploaded file
   const [file, setFile] = useState("");
   const storageRef = ref(storage, `/Slapsh/${file.name}`);
+  // const deleteImageRef = ref(storage, `/Slapsh/${file.name}`);
   // progress
   const [percent, setPercent] = useState(0);
   const [cards, setCards] = useState([]);
-  console.log("slapsh",cards);
+  // console.log("slapsh", cards);
+  const [openAlert, setOpenAlert] = useState(false)
+  const [alertMessage, setalertMessage] = useState("")
+
   // Handle file upload event and update state
   function handleChange(event) {
     setFile(event.target.files[0]);
   }
   const handleUpload = () => {
     // write data
-    if (!file) {
-      alert("Please upload an image first!");
-    }
 
-    // progress can be paused and resumed. It also exposes progress updates.
-    // Receives the storage reference and the file to upload.
     const uploadTask = uploadBytesResumable(storageRef, file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
         const percent = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100 );
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
 
         // update progress
         setPercent(percent);
+        setOpenAlert(true)
+        setalertMessage(`Image Uploaded : ${percent} %`)
       },
       (err) => alert(err),
       () => {
@@ -70,8 +72,18 @@ const Insert = () => {
             date: currentDate,
             seq: uid,
             img: url,
+          }).then(() => {
+            setPercent(0);
+            setFile("");
+
+            setOpenAlert(true)
+            setalertMessage(`"Inserted Slapsh Succssfully"`)
+          }).catch((err) => {
+
+            setOpenAlert(true)
+            setalertMessage(`Some error occurred try again!, ${err.message}`)
           });
-          alert("Inserted Succssfully");
+
         });
       }
     );
@@ -90,32 +102,47 @@ const Insert = () => {
             return setCards((oldCard) => [...oldCard, cards]);
           });
         } else {
-          console.log("No data available");
+          return
         }
       })
       .catch((error) => {
-        console.error(error);
+        // console.error(error);
+        setOpenAlert(true)
+        setalertMessage(` Some Error Occurred When Getting data ${error.message} `)
       });
   });
 
-  const deleteItems = (id) => {
-    deleteObject(storageRef)
-      .then(() => {
-        alert("Url has been deleted");
-      })
-      .catch((error) => {
-        alert("Url has been not deleted");
 
+
+  const deleteItems = (seq, url) => {
+    deleteObject(ref(storage, `${url}`));
+    
+      
+      remove(rdbf(db, `Slapsh/${seq}`))
+      .then(() => {
+        setOpenAlert(true)
+        setalertMessage("Url has been deleted")
+      }).catch((err) => {
+
+        setOpenAlert(true)
+        setalertMessage(`Photo has been not deleted ${err.message}`);
+        console.log("Error message",err.message)
       });
-      setTimeout(() => {
-        remove(rdbf(db, `Slapsh/${cards[id].seq}`));
-      }, 500);
   };
+
+
+
   return (
 
     <Box m="20px" width="98%" >
       <Header title="Insert slides " subtitle="Insert your slides for home screen" />
+      <ShowAlert
+        sx={{ display: "none" }}
+        message={alertMessage}
+        show={openAlert}
+        hide={() => { setOpenAlert(false) }}
 
+      />
       <Stack direction="row" alignItems="center" marginBottom="20px" spacing={2}>
         <IconButton color="primary" aria-label="upload picture" component="label">
           <input hidden onChange={handleChange} accept="/image/*" type="file" />
@@ -125,7 +152,8 @@ const Insert = () => {
               fontSize: "30px"
             }} />
         </IconButton>
-        <Button color="primary" variant="contained" component="label">
+
+        <Button disabled={!file} color="secondary" variant="outlined" component="label">
           Upload
           <Button onClick={handleUpload} hidden />
         </Button>
@@ -136,10 +164,11 @@ const Insert = () => {
         {cards.map((card, index) => {
           return (
             <Cards
+              key={index}
               img={card.img}
               date={card.date}
               deleteItem={() => {
-                deleteItems(index);
+                deleteItems(card.seq, card.img);
               }}
             />
           );

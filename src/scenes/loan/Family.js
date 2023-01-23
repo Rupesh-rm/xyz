@@ -23,6 +23,7 @@ import currentDate from "../../utils/date";
 import app from '../../firebase/config';
 import Cards from '../../components/Card';
 import Header from '../../components/Header';
+import ShowAlert from '../../components/ShowAlert';
 
 
 
@@ -39,19 +40,17 @@ const Family = () => {
   // progress
   const [percent, setPercent] = useState(0);
   const [cards, setCards] = useState([]);
+  // console.log(cards);
+
+  const [openAlert, setOpenAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState("")
+  // console.log("alertMessage", alertMessage);
 
   // Handle file upload event and update state
   function handleChange(event) {
     setFile(event.target.files[0]);
   }
   const handleUpload = () => {
-    // write data
-    if (!file) {
-      alert("Please upload an image first!");
-    }
-
-    // progress can be paused and resumed. It also exposes progress updates.
-    // Receives the storage reference and the file to upload.
     const uploadTask = uploadBytesResumable(storageRef, file);
     uploadTask.on(
       "state_changed",
@@ -73,7 +72,10 @@ const Family = () => {
             seq: uid,
             img: url,
           });
-          alert("Inserted Succssfully");
+          setOpenAlert(true)
+          setAlertMessage("Insert SuccessFully")
+          setPercent(0)
+          setFile("")
         });
       }
     );
@@ -100,22 +102,31 @@ const Family = () => {
       });
   });
 
-  const deleteItems = (id) => {
-    deleteObject(storageRef)
+  const deleteItems = (uid, url) => {
+    deleteObject(ref(storage, `${url}`));
+
+
+    remove(rdbf(db, `family/${uid}`))
       .then(() => {
-        alert("Url has been deleted");
+        setOpenAlert(true)
+        setAlertMessage("Deleted successfully!!!!")
       })
       .catch((error) => {
-        alert("Url has been not deleted");
+        setOpenAlert(true)
+        setAlertMessage(`url has been deleted ${error.message} !!!!!`);
 
-      });
-    setTimeout(() => {
-      remove(rdbf(db, `family/${cards[id].seq}`));
-    }, 500);
+      });;
+
   };
   return (
     <Box m="20px" width="98%" >
       <Header title="Family" subtitle="Shree balaji family" />
+      <ShowAlert
+        sx={{ display: "none" }}
+        message={alertMessage}
+        show={openAlert}
+        hide={() => { setOpenAlert(false) }}
+      />
       <Stack direction="row" alignItems="center" marginBottom="20px" spacing={2}>
         <IconButton color="primary" aria-label="upload picture" component="label">
           <input hidden onChange={handleChange} accept="/image/*" type="file" />
@@ -125,9 +136,10 @@ const Family = () => {
               fontSize: "30px"
             }} />
         </IconButton>
-        <Button color="primary" variant="contained" component="label">
-          Upload
-          <Button onClick={handleUpload} hidden />
+        <Button disabled={!file} type="submit" color="secondary" variant="outlined">
+          Add
+
+          <Button onClick={handleUpload} hidden style={{ width: "0px" }} />
         </Button>
         <p>{percent} "% done"</p>
       </Stack>
@@ -139,7 +151,7 @@ const Family = () => {
               img={card.img}
               date={card.date}
               deleteItem={() => {
-                deleteItems(index);
+                deleteItems(card.seq, card.img);
               }}
             />
           );

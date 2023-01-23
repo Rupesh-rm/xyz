@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { Box, Typography, useTheme, } from "@mui/material";
+import { DataGrid, GridToolbar, } from "@mui/x-data-grid";
 import { tokens } from "../theme";
 import Header from "../components/Header";
 
 import { Close, DownloadDone } from "@mui/icons-material";
-import { child, get, getDatabase, ref, } from "firebase/database";
+import { child, get, getDatabase, ref, update, } from "firebase/database";
 import app from '../firebase/config';
+import ShowAlert from "../components/ShowAlert";
 const db = getDatabase(app);
 
 const InstallUsers = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [newUserNotification, setNewUserNotification] = useState([])
-  // console.log(newUserNotification)
+  const [alertMessage, setalertMessage] = useState("")
+  // console.log("newUserNotification", newUserNotification)
+  const [openAlert, setOpenAlert] = useState(false);
 
   // columns configurations
   const columns = [
+    { field: "seq", headerName: "Id" },
     {
       field: "name",
       headerName: "Name",
@@ -66,12 +70,11 @@ const InstallUsers = () => {
           >
             {seen === false && <Close />}
             {seen === true && <DownloadDone />}
-            <Typography color={colors.greenAccent[100]} sx={{ ml: "5px" }}>
-              False
-            </Typography>
+
           </Box>
         )
       },
+
     },
 
   ];
@@ -82,10 +85,11 @@ const InstallUsers = () => {
     get(child(dbRef, `Install/`))
       .then((snapshot) => {
         const data = snapshot.val();
-
         if (snapshot.exists()) {
+          setNewUserNotification([])
           Object.values(data).map((installedUser) => {
-            return setNewUserNotification((OldUserNotification) => [...OldUserNotification, installedUser])
+            return setNewUserNotification((OldUserInstalledUser) => [...OldUserInstalledUser, installedUser])
+
 
           })
         }
@@ -93,8 +97,32 @@ const InstallUsers = () => {
       .catch((error) => {
         console.log("data is not avilable", error.message);
       });
-  }, []);
+  });
 
+
+
+  // handdleUpdateAppInstalledUser
+  const handdleUpdateAppInstalledUser = (params) => {
+    console.log(params.row.name, ":", params.row.seen, ":")
+
+    const dbRef = ref(db);
+
+    if (params.row.seen === false) {
+      update(child(dbRef, `Install/${params.row.number}`), {
+        seen: true
+      }).then(() => {
+        setOpenAlert(true)
+        setalertMessage("Seen came true")
+      }).catch(err => alert(err.message))
+    } else {
+      update(child(dbRef, `Install/${params.row.number}`), {
+        seen: false
+      }).then(() => {
+        setalertMessage("Seen Came false")
+      }).catch(err => alert(err.message))
+    }
+    // 
+  }
   return (
     <Box m="20px">
       <Header title="Users" subtitle="App Installed Users" />
@@ -129,12 +157,20 @@ const InstallUsers = () => {
       >
         {/* */}
         <DataGrid
-          checkboxSelection
-          components={{ Toolbar: GridToolbar }}
           getRowId={(newUserNotification) => newUserNotification.seq}
-          rows={newUserNotification} 
+          checkboxSelection
+          disableSelectionOnClick
+          components={{ Toolbar: GridToolbar }}
           columns={columns}
+          rows={newUserNotification}
+          onRowClick={handdleUpdateAppInstalledUser}
         />
+        <ShowAlert 
+        sx={{ display: "none" }} 
+        message={alertMessage}
+        show={openAlert} 
+        hide={()=>{setOpenAlert(false)}}
+         />
       </Box>
     </Box>
   )
