@@ -15,7 +15,7 @@ import Cards from "../../components/Card";
 import { getDownloadURL, getStorage, uploadBytesResumable, ref as storageRef } from "firebase/storage";
 import currentDate from "../../utils/date";
 import ShowAlert from "../../components/ShowAlert";
-
+import pdfImg from "../../images/pdf.png"
 
 
 
@@ -163,7 +163,7 @@ const Document = () => {
                     (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
 
                 // update progress
-               
+
                 setOpenAlert(true)
                 setAlertMessage(`Document Uploaded ${percent} % !!!!`)
             },
@@ -260,7 +260,7 @@ const Document = () => {
                         return (
                             <Cards
                                 key={index}
-                                img={doc.url}
+                                img={pdfImg}
                                 date={doc.date}
 
                             />

@@ -67,9 +67,9 @@ const Family = () => {
         // download url
         getDownloadURL(uploadTask.snapshot.ref).then((url) => {
           const uid = new Date().getTime();
-          set(rdbf(db, `/family/${uid}/`), {
+          set(rdbf(db, `/Family/${uid}/`), {
             date: currentDate,
-            seq: uid,
+            seq: `${uid}`,
             img: url,
           });
           setOpenAlert(true)
@@ -85,7 +85,7 @@ const Family = () => {
   // read data
   useEffect(() => {
     const dbRef = rdbf(db);
-    get(child(dbRef, `family/`))
+    get(child(dbRef, `Family/`))
       .then((snapshot) => {
         const data = snapshot.val();
         if (snapshot.exists()) {
@@ -106,7 +106,7 @@ const Family = () => {
     deleteObject(ref(storage, `${url}`));
 
 
-    remove(rdbf(db, `family/${uid}`))
+    remove(rdbf(db, `Family/${uid}`))
       .then(() => {
         setOpenAlert(true)
         setAlertMessage("Deleted successfully!!!!")

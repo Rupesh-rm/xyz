@@ -18,6 +18,7 @@ import InstallUsers from "./installedUser/installUser";
 import Notificatiions from "./notification/notificatio";
 import RequestServices from "./requestService/reqService";
 import UserDocuments from "./scenes/document/Document";
+import InsertSlides from "./scenes/loan/InsertSlides";
 
 
 function App() {
@@ -34,7 +35,8 @@ function App() {
               <Topbar setIsSidebar={setIsSidebar} />
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/add-slides" element={<InsertSlapsh />} />
+                <Route path="/add-slides" element={<InsertSlides />} />
+                <Route path="/add-slapsh" element={<InsertSlides />} />
                 <Route path="/add-services" element={<AddServices />} />
                 <Route path="/add-award" element={<Award />} />
                 <Route path="/balaji-family" element={<Family />} />

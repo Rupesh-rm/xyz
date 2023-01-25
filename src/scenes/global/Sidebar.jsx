@@ -135,6 +135,13 @@ const Sidebar = () => {
               Services
             </Typography>
             <Item
+              title="Add Slapsh"
+              to="/add-slapsh"
+              icon={<DriveFileMoveOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
               title="Add Slides"
               to="/add-slides"
               icon={<DriveFileMoveOutlinedIcon />}
