@@ -147,28 +147,17 @@ const AddServices = () => {
 ///
     // delete services
     const deleteCardItems = (uid, url) => {
-
         deleteObject(ref(storage, `${url}`));
-        
         remove(rdbf(db, `Src/${uid}`))
         .then(() => {
             setOpenAlert(true)
             setAlertMessage("Url has been deleted")
             
         }).catch((err) => {
-
             setOpenAlert(true)
             setAlertMessage(`Photo has been not deleted ${err.message}`);
             console.log("Error message", err.message)
         });
-
-
-
-
-
-
-
-
     }
 
     //insert at top
@@ -267,10 +256,10 @@ const AddServices = () => {
             })
     }
     //delete : dilog box - image
-    const deleteServiceImagesOfDilogBox = (uid, suid_) => {
+    const deleteServiceImagesOfDilogBox = (uid, url) => {
         // alert(uid, suid_);
         console.log(storageRefimg)
-        deleteObject(storageRefimg)
+        deleteObject(ref(storage, `${url}`))
             .then(() => {
                 setOpenAlert(true)
                 setAlertMessage(`Url has been  deleted!`)
@@ -281,13 +270,15 @@ const AddServices = () => {
                 setAlertMessage(`Url has been not deleted!  ${error.message}.`)
             });
     }
+
+
     useEffect(() => {
         readServiceImages()
         readServiceText()
     })
 
-    // upload text : dilogbox text
-    const handleSubmitText = (e) => {
+    // Write Accordian :  Service text
+    const handleWriteTextAccordian = (e) => {
         e.preventDefault()
         const uid = new Date().getTime();
         if (!textFieldTitle || !textField) {
@@ -318,7 +309,7 @@ const AddServices = () => {
         });
 
     }
-    //read data : dilog box - text
+    //Show Accordian : Service text
     const readServiceText = () => {
         const dbRef = rdbf(db);
         get(child(dbRef, `SrcSource/${suid_}/stext/`))
@@ -336,7 +327,9 @@ const AddServices = () => {
                 console.info(err.message);
             })
     }
-    // delete accordians 
+
+
+    // delete accordians : Service Text
     const deleteAccordions = (uid, suid_) => {
         // alert(uid, ":", index)
         // delete header text and other
@@ -489,14 +482,7 @@ const AddServices = () => {
                                         src={allImagesData.image}
                                         alt={allImagesData.uid}
                                     />
-                                    <div className="hide">
-                                        <IconButton onClick={() => { deleteServiceImagesOfDilogBox(allImagesData.uid, allImagesData.uid) }}>
-                                            <DeleteIcon sx={{
-                                                color: colors.greenAccent[500],
-                                                fontSize: "28px"
-                                            }} />
-                                        </IconButton>
-                                    </div>
+                                  
 
                                 </ImageListItem>
                             ))}
@@ -510,7 +496,7 @@ const AddServices = () => {
                                 maxWidth: '100%',
                             }}
                         >
-                            <form onSubmit={handleSubmitText} style={{ position: "relative" }} >
+                            <form onSubmit={handleWriteTextAccordian} style={{ position: "relative" }} >
                                 <TextField
                                     id="standard-textarea"
                                     label="Title"

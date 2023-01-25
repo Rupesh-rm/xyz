@@ -51,9 +51,9 @@ const Award = () => {
         // download url
         getDownloadURL(uploadTask.snapshot.ref).then((url) => {
           const uid = new Date().getTime();
-          set(rdbf(db, `/Award/${uid}/`), {
+          set(rdbf(db, `/Awd/${uid}/`), {
             date: currentDate,
-            seq: uid,
+            seq: `${uid}`,
             img: url
           }).then(() => {
             setOpenAlert(true)
@@ -71,7 +71,7 @@ const Award = () => {
   // read data
   useEffect(() => {
     const dbRef = rdbf(db);
-    get(child(dbRef, 'Award/'))
+    get(child(dbRef, 'Awd/'))
       .then((snapshort) => {
         const data = snapshort.val();
         if (snapshort.exists()) {
@@ -93,7 +93,7 @@ const Award = () => {
     // delete image url
     deleteObject(ref(storage, `${url}`));
     // delete header text and other
-    remove(rdbf(db, `Award/${uid}`))
+    remove(rdbf(db, `Awd/${uid}`))
       .then(() => {
         setOpenAlert(true)
         setAlertMessage("Deleted SuccessFully")

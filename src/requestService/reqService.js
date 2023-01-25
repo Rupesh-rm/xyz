@@ -24,14 +24,14 @@ const RequestServices = () => {
 
     const [userData, setUserData] = useState([])
     const [requsestServicesData, setrequsestServicesData] = useState([]);
-  
+
     const [userName, setUSerName] = useState(null)
-    // console.log(userName)
-    // read all  users data.
+    const [userUid, setUserUid] = useState(null)
+    const [userSeq, setUserSeq] = useState(null)
     const [openAlert, setOpenAlert] = useState(false)
     const [alertMessage, setAlertMessage] = useState("")
-    // console.log("alertMessage", alertMessage);
 
+    // console.log(`Mysrc/${userUid}/${userSeq}`);
 
     useEffect(() => {
         const dbRef = ref(db);
@@ -51,7 +51,7 @@ const RequestServices = () => {
     }, [userData]);
 
     //handdle Open Select DilogBox
-    const handdleOpenSelectDilogBox = (uid, name) => {
+    const handdleOpenSelectDilogBox = (uid, name, seq) => {
         // open dilog when click user profile
         setSelectDilog(true)
 
@@ -86,10 +86,19 @@ const RequestServices = () => {
                 console.log("data is not avilable", error.message);
             });
 
+       
+       // set user name as a global variable
+            setUSerName(name);
 
 
-        setUSerName(name)
-
+        //update request seen
+ 
+      
+        update(child(dbRef, `Mysrc/${uid}/${seq}`), {
+            seen: true
+        }).then(() => {
+            console.log("Updated")
+        }).catch(err => console.log("not updated ",err.message))
     }
     //handdle Open Select DilogBox
     const handdlColseSelectDilogBox = () => {
@@ -108,11 +117,9 @@ const RequestServices = () => {
             setOpen(true)
         }
         if (e.target.value === 2) {
-            setOpenRequestServiceDilogBox(true)
+            setOpenRequestServiceDilogBox(true);
+       
         }
-
-
-
     }
 
 
@@ -197,7 +204,7 @@ const RequestServices = () => {
             <List  >
                 <Grid container item xs={12}  >
                     {userData.map((user, index) => {
-                     
+
                         return (
                             <Grid key={index} item xs={3} sx={{ width: '100%', borderColor: colors.primary[500], borderWidth: "2px", borderStyle: "solid", maxWidth: 400, background: colors.blueAccent[900] }} >
                                 <ListItem   >
@@ -206,7 +213,7 @@ const RequestServices = () => {
                                         {/*  */}
                                         <Badge color="primary" badgeContent={requsestServicesData.length}>
 
-                                            <Avatar alt={user.name} src={user.profile} onClick={() => { handdleOpenSelectDilogBox(user.uid, user.name) }} />
+                                            <Avatar alt={user.name} src={user.profile} onClick={() => { handdleOpenSelectDilogBox(user.uid, user.name, user.seq) }} />
                                         </Badge>
                                     </ListItemAvatar>
                                     <ListItemText
